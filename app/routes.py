@@ -35,20 +35,29 @@ def api_upload_preview():
     if file:
         try:
             filename = secure_filename(file.filename)
-            # The 'filepath' is now the name of the object in the bucket
             filepath = f"uploads/{filename}" 
             
-            # Get the bucket
+            # --- NEW FIX: Read the file into memory ONCE ---
+            # This reads the SpooledTemporaryFile into bytes
+            file_bytes = file.read()
+            # ----------------------------------------------
+
+            # 1. Use the bytes to upload to GCS
             bucket = storage_client.bucket(app.config['GCS_BUCKET_NAME'])
-            # Create a "blob" (object) and upload the file
             blob = bucket.blob(filepath)
-            blob.upload_from_file(file.stream)
+            # Create a new in-memory stream for GCS
+            gcs_stream = io.BytesIO(file_bytes)
+            blob.upload_from_file(gcs_stream)
 
             # Save the GCS path to the session
             session['filepath'] = filepath 
             
-            file.stream.seek(0) # Rewind the file stream
-            document = Document(file.stream)
+            # 2. Use the bytes again to create the preview
+            # Create a second in-memory stream for python-docx
+            docx_stream = io.BytesIO(file_bytes)
+            document = Document(docx_stream)
+            # ----------------------------------------------
+            
             preview_text_list = [para.text for para in document.paragraphs]
             full_preview = "\n".join(preview_text_list)
             
