@@ -1,0 +1,176 @@
+/* static/style.css */
+
+/* --- 1. Theme and Base Styles --- */
+:root {
+    --bg-color: #1a1a1a;
+    --text-color: #f4f4f4;
+    --accent-color: #A683DA; /* Purple from Lexsy screenshot */
+    --accent-hover: #c0a0f0;
+    --container-bg: #2a2a2a;
+    --border-color: #444;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex-grow: 1;
+    width: 100%;
+    max-width: 1400px;
+    margin: 20px auto;
+    padding: 0 20px;
+    box-sizing: border-box; /* Ensures padding doesn't break width */
+}
+
+/* --- 2. Common Elements --- */
+nav {
+    width: 100%;
+    background-color: var(--container-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 15px 40px;
+    box-sizing: border-box;
+}
+
+footer {
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    background-color: var(--container-bg);
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+}
+
+.btn {
+    display: inline-block;
+    padding: 12px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    background-color: var(--accent-color);
+    color: white;
+    transition: background-color 0.2s;
+}
+.btn:hover {
+    background-color: var(--accent-hover);
+}
+.btn:disabled {
+    background-color: #555;
+    color: #999;
+    cursor: not-allowed;
+}
+
+.preview-box {
+    border: 1px solid var(--border-color);
+    background: #111;
+    padding: 20px;
+    border-radius: 5px;
+    height: 70vh;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-y: scroll;
+    white-space: pre-wrap;
+    font-family: monospace;
+    color: #ccc;
+}
+
+main.full-width {
+    max-width: none; /* Removes the 1400px width limit */
+    padding: 20px 40px; /* Adds side padding */
+}
+
+/* --- 3. Page Layouts --- */
+.layout-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    height: 100%;
+}
+
+.layout-split-fill {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    height: 100%;
+}
+
+.layout-chat {
+    display: grid;
+    grid-template-columns: 7fr 3fr;
+    gap: 50px;
+    height: 100%; 
+}
+
+.layout-centered {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+.centered-content {
+    width: 100%;
+    max-width: 900px;
+}
+
+/* --- 4. Page-Specific Styles --- */
+
+/* Home Page */
+.upload-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0px 50px 0px 150px;
+}
+.upload-panel h1 {
+    margin-top: 0;
+    font-size: 30px;
+}
+.upload-panel p {
+    font-size: 13px;
+}
+.status-message {
+    margin-top: 15px;
+    font-weight: bold;
+    color: var(--accent-color);
+}
+.start-container {
+    margin-top: 20px;
+}
+
+/* Chat Page */
+.live-preview-container h3 {
+    margin-top: 0;
+}
+.highlight {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 2px 0;
+    border-radius: 3px;
+}
+
+/* Download Page */
+.download-page-preview {
+    height: 50vh; /* Shorter preview for this page */
+    text-align: left;
+    margin-bottom: 20px;
+}
+.button-container .btn {
+    margin: 0 10px;
+}
+.btn-edit {
+    background-color: var(--container-bg);
+    border: 1px solid var(--border-color);
+}
+.btn-edit:hover {
+    background-color: #444;
+}

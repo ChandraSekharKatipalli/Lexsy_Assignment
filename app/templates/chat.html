@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fill Document - Lexsy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* CSS for the chat UI (it's big, so we keep it here) */
+        .chat-container {
+            height: 70vh;
+            background-color: var(--container-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            padding: 12px 18px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            line-height: 1.5;
+            max-width: 85%;
+        }
+        .message.bot {
+            background-color: #3b3b3b;
+            color: var(--text-color);
+            align-self: flex-start;
+        }
+        .message.user {
+            background-color: var(--accent-color);
+            color: white;
+            align-self: flex-end;
+        }
+        .message.bot strong {
+            color: var(--accent-hover);
+        }
+        .message .explanation {
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #555;
+            font-style: italic;
+        }
+        .chat-input {
+            border-top: 1px solid var(--border-color);
+            padding: 15px;
+        }
+        .chat-input form { display: flex; }
+        .chat-input input {
+            flex-grow: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 16px;
+            outline: none;
+            background-color: #333;
+            color: white;
+        }
+        .chat-input button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        </nav>
+
+    <main class="layout-split full-width">
+        <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+                </div>
+            <div class="chat-input">
+                <form id="chat-form">
+                    <input type="text" id="message-input" placeholder="Type your answer..." autofocus>
+                    <button type="submit">&#10148;</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="live-preview-container">
+            <h3>Live Preview</h3>
+            <div id="live-preview-box" class="preview-box">
+                </div>
+        </div>
+    </main>
+
+    <footer>
+        </footer>
+
+    <div id="full-preview-text" style="display: none;">{{ preview_text }}</div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        
+        // --- New Preview Elements ---
+        const previewPanel = document.getElementById('live-preview-box');
+        const fullPreviewText = document.getElementById('full-preview-text').textContent;
+        let currentQuestionId = null;
+        let lastContext = ""; // To remove old highlight
+
+        // 1. Add a message to the chat window
+        function addMessage(text, sender) {
+            const message = document.createElement('div');
+            message.classList.add('message', sender);
+            message.innerHTML = text;
+            chatMessages.appendChild(message);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // --- New: Function to update the preview panel ---
+        function updatePreview(context, placeholder) {
+            let newFullText = fullPreviewText;
+
+            // This highlights the *exact* paragraph and placeholder
+            if (context && placeholder) {
+                // 1. Create the highlighted version of the context paragraph
+                const highlightedContext = context.replace(placeholder, 
+                    `<span class="highlight">${placeholder}</span>`
+                );
+                // 2. Replace the original context with the highlighted one
+                newFullText = fullPreviewText.replace(context, highlightedContext);
+            }
+            
+            previewPanel.innerHTML = newFullText;
+            
+            // Scroll the preview panel to the highlight
+            const highlight = previewPanel.querySelector('.highlight');
+            if (highlight) {
+                highlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // 2. Fetch the next question
+        async function fetchNextQuestion(answerData = {}) {
+            const url = '{{ url_for("api_chat") }}';
+            const method = answerData.answer ? 'POST' : 'GET';
+            const options = {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: method === 'POST' ? JSON.stringify(answerData) : null
+            };
+
+            try {
+                const response = await fetch(url, options);
+                const data = await response.json();
+
+                if (data.status === 'question') {
+                    // Add AI question bubble
+                    const questionText = `
+                        <strong>${data.question_text}</strong>
+                        <div class="explanation">${data.explanation_text}</div>
+                    `;
+                    addMessage(questionText, 'bot');
+                    currentQuestionId = data.id;
+                    
+                    // --- New: Update the preview panel ---
+                    // We need the *original* context from the session['questions']
+                    // api_chat needs to send this
+                    updatePreview(data.context, data.placeholder);
+
+                } else if (data.status === 'done') {
+                    addMessage('Great, all done! Generating your document...', 'bot');
+                    window.location.href = data.redirect_url;
+                }
+            } catch (error) {
+                console.error('Error fetching chat data:', error);
+                addMessage('An error occurred. Please try refreshing.', 'bot');
+            }
+        }
+
+        // 3. Handle the form submission
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const answer = messageInput.value.trim();
+            if (!answer) return;
+
+            addMessage(answer, 'user');
+            messageInput.value = '';
+            messageInput.disabled = true;
+
+            await fetchNextQuestion({ 
+                answer: answer, 
+                id: currentQuestionId 
+            });
+            
+            messageInput.disabled = false;
+            messageInput.focus();
+        });
+
+        // 4. Start the conversation
+        window.addEventListener('load', () => {
+            // Set the initial preview text (un-highlighted)
+            previewPanel.textContent = fullPreviewText;
+            // Fetch the first question
+            fetchNextQuestion(); 
+        });
+    </script>
+</body>
+</html>

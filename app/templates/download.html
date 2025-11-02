@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Document is Ready - Lexsy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav>
+        </nav>
+
+    <main class="layout-centered">
+        <div class="centered-content">
+            <h1>Your Document is Ready</h1>
+            <p>
+                Below is a text-only preview. All formatting will be preserved 
+                in the final `.docx` file.
+            </p>
+
+            <div class="preview-box download-page-preview">
+{{ preview_text }}
+            </div>
+
+            <div class="button-container">
+                <a href="{{ url_for('get_file', filename=final_filename) }}" class="btn">
+                    Download Completed Document
+                </a>
+                <a href="{{ url_for('edit_answers') }}" class="btn btn-edit">
+                    Edit Answers
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        </footer>
+</body>
+</html>

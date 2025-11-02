@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Document - Lexsy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav>
+        </nav>
+
+    <main class="layout-split full-width">
+        <div class="upload-panel">
+            <h1>Legal documents made easy.</h1>
+            <p>Welcome to Lexsy. Upload your .docx draft to get started.</p>
+
+            <form id="upload-form" enctype="multipart/form-data">
+                <input type="file" name="document" id="file-input" required>
+                <button type="submit" id="upload-button" class="btn">Upload</button>
+            </form>
+            
+            <div id="status-container" class="status-message" style="display: none;"></div>
+
+            <div class="start-container">
+                <form action="{{ url_for('fill_form') }}" method="GET">
+                    <button type="submit" id="start-button" class="btn" disabled>
+                        Start Filling
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="preview-panel">
+            <h3>Document Preview</h3>
+            <div id="preview-box" class="preview-box">
+                </div>
+        </div>
+    </main>
+
+    <footer>
+        </footer>
+
+    <script>
+        const uploadForm = document.getElementById('upload-form');
+        const uploadButton = document.getElementById('upload-button');
+        const fileInput = document.getElementById('file-input');
+        const statusContainer = document.getElementById('status-container');
+        const previewBox = document.getElementById('preview-box');
+        const startButton = document.getElementById('start-button');
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('document', fileInput.files[0]);
+
+            statusContainer.style.display = 'block';
+            statusContainer.textContent = 'Uploading and generating preview...';
+            uploadButton.disabled = true;
+            startButton.disabled = true;
+
+            try {
+                const previewResponse = await fetch("{{ url_for('api_upload_preview') }}", {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!previewResponse.ok) throw new Error('Failed to get preview.');
+                const data = await previewResponse.json();
+                
+                previewBox.textContent = data.preview_text;
+                
+                statusContainer.textContent = 'Processing the document this may take a moment...';
+                
+                const aiResponse = await fetch("{{ url_for('api_process_ai') }}");
+                if (!aiResponse.ok) throw new Error('AI processing failed.');
+                
+                const aiData = await aiResponse.json();
+                if (aiData.status === 'ready') {
+                    statusContainer.textContent = 'Ready! You can now start filling.';
+                    startButton.disabled = false;
+                } else {
+                    throw new Error('AI processing returned an error.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                statusContainer.textContent = `An error occurred.`;
+                statusContainer.style.color = 'red';
+                uploadButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
