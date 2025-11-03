@@ -9,6 +9,7 @@ __pycache__/
 # Secret keys
 .env
 *.env
+service-account-key.json
 
 # User-generated content
 uploads/
