@@ -4,7 +4,7 @@
 :root {
     --bg-color: #1a1a1a;
     --text-color: #f4f4f4;
-    --accent-color: #A683DA; /* Purple from Lexsy screenshot */
+    --accent-color: #A683DA;
     --accent-hover: #c0a0f0;
     --container-bg: #2a2a2a;
     --border-color: #444;
@@ -27,7 +27,7 @@ main {
     max-width: 1400px;
     margin: 20px auto;
     padding: 0 20px;
-    box-sizing: border-box; /* Ensures padding doesn't break width */
+    box-sizing: border-box;
 }
 
 /* --- 2. Common Elements --- */
@@ -85,8 +85,8 @@ footer {
 }
 
 main.full-width {
-    max-width: none; /* Removes the 1400px width limit */
-    padding: 20px 40px; /* Adds side padding */
+    max-width: none;
+    padding: 20px 40px;
 }
 
 /* --- 3. Page Layouts --- */
@@ -160,7 +160,7 @@ main.full-width {
 
 /* Download Page */
 .download-page-preview {
-    height: 50vh; /* Shorter preview for this page */
+    height: 50vh;
     text-align: left;
     margin-bottom: 20px;
 }

@@ -37,8 +37,7 @@ def api_upload_preview():
             filename = secure_filename(file.filename)
             filepath = f"uploads/{filename}" 
             
-            # --- NEW FIX: Read the file into memory ONCE ---
-            # This reads the SpooledTemporaryFile into bytes
+            # --- Read the file into memory ONCE ---
             file_bytes = file.read()
             # ----------------------------------------------
 
@@ -85,7 +84,7 @@ def api_process_ai():
         
         document = Document(file_stream)
         
-        # --- START: UPDATED PARSING LOGIC ---
+        # --- PARSING LOGIC ---
         
         pattern = r'\[.*?\]' 
         questions = []
@@ -125,8 +124,6 @@ def api_process_ai():
                 for cell in row.cells:
                     for para in cell.paragraphs:
                         process_placeholders(para)
-        
-        # --- END: UPDATED PARSING LOGIC ---
 
         print(f"--- Finished. Found {len(questions)} questions. ---")
 

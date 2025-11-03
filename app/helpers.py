@@ -10,7 +10,7 @@ def generate_smart_question(full_document_text, context, placeholder):
     """
     
     model = genai.GenerativeModel(
-        'models/gemini-2.5-flash', # Or your working model name
+        'models/gemini-2.5-flash',
         generation_config={"response_mime_type": "application/json"}
     )
     
