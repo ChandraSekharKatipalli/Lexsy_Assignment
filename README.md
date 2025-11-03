@@ -138,13 +138,6 @@ Lexsy_Assignment/
 │       ├── chat.html     # Chat/Live preview page
 │       └── download.html # Download page
 │
-├── .venv/                # Virtual environment (ignored)
-├── completed/            # Completed documents (local, ignored)
-├── uploads/              # Uploaded templates (local, ignored)
-│
-├── .env                  # Local environment keys (ignored)
-├── service-account-key.json # GCS credentials (ignored)
-│
 ├── config.py             # Loads configuration from environment
 ├── run.py                # Entry point to run the application
 ├── Dockerfile            # Instructions to build the container
