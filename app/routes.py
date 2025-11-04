@@ -4,6 +4,8 @@ import re
 import io
 import uuid
 import io
+import google.auth
+from google.auth import impersonated_credentials
 import google.cloud.storage
 from datetime import timedelta
 from flask import (
@@ -287,26 +289,40 @@ def generate_document():
 @app.route('/get-file/<path:filename>') # Use <path:> to capture slashes
 def get_file(filename):
     try:
-        bucket = storage_client.bucket(app.config['GCS_BUCKET_NAME'])
+        bucket_name = app.config['GCS_BUCKET_NAME']
+        
+        # 1. Get the app's default identity (the token)
+        source_credentials, _ = google.auth.default()
+
+        # 2. Define who we are impersonating (the account with Token Creator role)
+        service_account_email = "213433359152-compute@developer.gserviceaccount.com"
+
+        # 3. Create the new impersonated credentials
+        target_credentials = impersonated_credentials.Credentials(
+            source_credentials=source_credentials,
+            target_principal=service_account_email,
+            target_scopes=["https://www.googleapis.com/auth/devstorage.read_only"],
+            lifetime=300  # 5 minutes
+        )
+
+        # 4. Create a NEW storage client using these new credentials
+        # This is the critical step.
+        signing_client = google.cloud.storage.Client(credentials=target_credentials)
+        
+        # 5. Use the new client to get the blob
+        bucket = signing_client.bucket(bucket_name)
         blob = bucket.blob(filename)
 
         if not blob.exists():
             print(f"Error: Blob does not exist at path: {filename}")
             return "Error: File not found.", 404
 
-        # Get the app's own service account email from its config
-        # This is the identity you gave the 'Token Creator' role
-        service_account_email = app.config.get('SERVICE_ACCOUNT_EMAIL')
-        if not service_account_email:
-             # This is your default service account from the error log
-             service_account_email = "213433359152-compute@developer.gserviceaccount.com"
-
+        # 6. Generate the URL. The blob "knows" it can sign.
         signed_url = blob.generate_signed_url(
             version="v4",
             expiration=timedelta(minutes=15),
             method="GET",
-            response_disposition="attachment; filename=completed_document.docx",
-            service_account_email=service_account_email # <-- Add this line
+            response_disposition="attachment; filename=completed_document.docx"
         )
         
         return redirect(signed_url)
