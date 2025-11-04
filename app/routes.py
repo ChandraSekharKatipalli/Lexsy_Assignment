@@ -284,13 +284,17 @@ def generate_document():
         return "An error occurred while generating your document."
 
 # --- Serves the generated file for download ---
-@app.route('/get-file/<path:filename>') # Use <path:> to capture slashes
+@app.route('/get-file/<path:filename>')
 def get_file(filename):
     try:
         # This no longer sends a file, it sends a secure, temporary URL
         bucket = storage_client.bucket(app.config['GCS_BUCKET_NAME'])
         blob = bucket.blob(filename)
-        
+
+        if not blob.exists():
+            print(f"Error: Blob does not exist at path: {filename}")
+            return "Error: File not found.", 404
+
         # Create a signed URL valid for 15 minutes
         signed_url = blob.generate_signed_url(
             version="v4",
@@ -301,12 +305,8 @@ def get_file(filename):
         
         # Redirect the user to the secure download link
         return redirect(signed_url)
+        
     except Exception as e:
-        print(f"Error generating signed URL: {e}")
-        return redirect(url_for('index'))
-
-# --- Lets the user edit their answers ---
-@app.route('/edit')
-def edit_answers():
-    session.pop('answers', None)
-    return redirect(url_for('fill_form'))
+        # This will now print the full error to your logs
+        print(f"CRITICAL Error generating signed URL: {e}")
+        return "An error occurred while trying to generate your download link.", 500
