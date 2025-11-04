@@ -310,3 +310,10 @@ def get_file(filename):
         # This will now print the full error to your logs
         print(f"CRITICAL Error generating signed URL: {e}")
         return "An error occurred while trying to generate your download link.", 500
+
+
+# --- Lets the user edit their answers ---
+@app.route('/edit')
+def edit_answers():
+    session.pop('answers', None)
+    return redirect(url_for('fill_form'))
