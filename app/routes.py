@@ -284,10 +284,9 @@ def generate_document():
         return "An error occurred while generating your document."
 
 # --- Serves the generated file for download ---
-@app.route('/get-file/<path:filename>')
+@app.route('/get-file/<path:filename>') # Use <path:> to capture slashes
 def get_file(filename):
     try:
-        # This no longer sends a file, it sends a secure, temporary URL
         bucket = storage_client.bucket(app.config['GCS_BUCKET_NAME'])
         blob = bucket.blob(filename)
 
@@ -295,21 +294,27 @@ def get_file(filename):
             print(f"Error: Blob does not exist at path: {filename}")
             return "Error: File not found.", 404
 
-        # Create a signed URL valid for 15 minutes
+        # Get the app's own service account email from its config
+        # This is the identity you gave the 'Token Creator' role
+        service_account_email = app.config.get('SERVICE_ACCOUNT_EMAIL')
+        if not service_account_email:
+             # This is your default service account from the error log
+             service_account_email = "213433359152-compute@developer.gserviceaccount.com"
+
         signed_url = blob.generate_signed_url(
             version="v4",
             expiration=timedelta(minutes=15),
             method="GET",
-            response_disposition="attachment; filename=completed_document.docx"
+            response_disposition="attachment; filename=completed_document.docx",
+            service_account_email=service_account_email # <-- Add this line
         )
         
-        # Redirect the user to the secure download link
         return redirect(signed_url)
         
     except Exception as e:
-        # This will now print the full error to your logs
         print(f"CRITICAL Error generating signed URL: {e}")
         return "An error occurred while trying to generate your download link.", 500
+
 
 
 # --- Lets the user edit their answers ---
